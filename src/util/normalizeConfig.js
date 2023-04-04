@@ -1,5 +1,6 @@
 import { flagEnabled } from '../featureFlags'
 import log, { dim } from './log'
+import { env } from '../lib/sharedState'
 
 export function normalizeConfig(config) {
   // Quick structure validation
@@ -294,6 +295,19 @@ export function normalizeConfig(config) {
         // TODO: Add https://tw.wtf/invalid-glob-braces
       ])
       break
+    }
+  }
+
+  if (env.OXIDE) {
+    if (config.content.files.length <= 0) {
+      env.DEBUG && console.time('Calculating resolve content paths')
+      // This might need to moved to another place so that we can re-use the resolveConfig in the browser
+      // without using `path` and what not.
+      config.content.files = require('@tailwindcss/oxide').resolveContentPaths({
+        base: process.cwd(),
+      })
+      env.DEBUG && console.timeEnd('Calculating resolve content paths')
+      console.log(config.content.files)
     }
   }
 
